@@ -1,0 +1,16 @@
+# Git 属性配置
+# ⚠️ 背景：Windows 上 git 常默认 core.autocrlf=true，提交时会悄悄把 CRLF 转成 LF。
+#    而 iscu 的 JsonString 是**逐字节对齐实船**的产物（换行符是格式的一部分），
+#    被转换后字节就变了 —— 与 FAQ 里"JsonString 208 变 221"同一类坑。
+#    所以这些产物必须标记 -text（不做任何换行转换，原样存取）。
+
+# iscu 配置产物：字节必须原样保留
+ships/**/*.json     -text
+ships/**/*.sql      -text
+ships/**/*.csv      -text
+tools/*.csv         -text
+
+# 文本类文档：允许 git 按平台习惯处理（不影响正确性）
+*.md    text=auto
+*.py    text=auto
+*.sh    text eol=lf
