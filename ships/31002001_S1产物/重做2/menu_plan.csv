@@ -1,0 +1,16 @@
+﻿menu_name,menu_name_en,identification,sort,action_path,keywords
+主机,M/E,ME,1,/engineMonitor/ME,主机
+发电机,D/E SET,emengine,2,/engineMonitor/emengine,发电机;DG;主发电机
+齿轮箱,Gearbox,Gearbox,3,/engineMonitor/gearbox,齿轮箱
+舵机,Emsteering,Emsteering,4,/engineMonitor/emsteering,舵机;舵角;舵
+液位,Cabin level,CabinLevel,5,/engineMonitor/cabinLevel,舱;柜;液位;油位;水位
+配电板,Distribution board,DistributionBoard,6,/engineMonitor/distributionBoard,配电;绝缘;岸电;开关;电压;电流;发电机主开关
+监测报警,Detection alarm,DetectionAlarm,7,/engineMonitor/detectionAlarm,报警;故障;停车;减速;超速;过高;过低;高温;低温
+制冷系统,Refrigeration system,RefrigerationSystem,8,/engineMonitor/refrigerationSystem,制冷;冰机;空调
+锅炉,Boiler system,BoilerSystem,9,/engineMonitor/boilerSystem,锅炉;废气炉
+二次换热系统,Secondary heat exchange system,SecondaryHeatExchange,10,/engineMonitor/SecondaryHeatExchange,换热;加热;冷却器
+全船压载水管系统,Ballast water piping system,BallastWaterPipingSystem,11,/engineMonitor/WB,压载
+液货及扫舱管系统,Liquid cargo and tank sweeping pipe system,LiquidCargoAndTankSweepingPipeSystem,12,/engineMonitor/CT,液货;扫舱;货舱;洗舱
+甲板喷水管系,Deck sprinkler system,DeckSprinklerSystem,13,/engineMonitor/DF,甲板;喷水;消防
+流量计,Flowmeter,Flowmeter,14,/engineMonitor/Flowmeter,
+其他,OTHER,OTHER,15,/engineMonitor/other,

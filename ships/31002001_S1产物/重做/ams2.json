@@ -1,0 +1,76 @@
+{
+    "ChanCode": "2",
+    "ChanDesc": "",
+    "ChanType": "7",
+    "DataProtocol": "2",
+    "RTU": [
+        {
+            "DataLen": "12",
+            "DevName": "1301",
+            "FunCode": "4",
+            "RegisterBegin": "30168",
+            "SlaveId": "1",
+            "Results": [
+                {
+                    "Addr": "30168",
+                    "Alias": "3016800",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "2",
+                    "DataTypeRegister": "14"
+                },
+                {
+                    "Addr": "30170",
+                    "Alias": "3017000",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "2",
+                    "DataTypeRegister": "14"
+                },
+                {
+                    "Addr": "30172",
+                    "Alias": "3017200",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "2",
+                    "DataTypeRegister": "14"
+                },
+                {
+                    "Addr": "30174",
+                    "Alias": "3017400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "2",
+                    "DataTypeRegister": "14"
+                },
+                {
+                    "Addr": "30176",
+                    "Alias": "3017600",
+                    "Coefficient": "0,0.001,0",
+                    "DataLen": "2",
+                    "DataTypeRegister": "14"
+                },
+                {
+                    "Addr": "30178",
+                    "Alias": "3017800",
+                    "Coefficient": "0,0.001,0",
+                    "DataLen": "2",
+                    "DataTypeRegister": "14"
+                }
+            ]
+        },
+        {
+            "DataLen": "2",
+            "DevName": "1301",
+            "FunCode": "4",
+            "RegisterBegin": "30204",
+            "SlaveId": "1",
+            "Results": [
+                {
+                    "Addr": "30204",
+                    "Alias": "3020400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "2",
+                    "DataTypeRegister": "14"
+                }
+            ]
+        }
+    ],
+    "WayUid": "1575876387"
+}

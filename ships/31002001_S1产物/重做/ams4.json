@@ -1,0 +1,881 @@
+{
+    "ChanCode": "4",
+    "ChanDesc": "",
+    "ChanType": "7",
+    "DataProtocol": "2",
+    "RTU": [
+        {
+            "DataLen": "61",
+            "DevName": "1301",
+            "FunCode": "3",
+            "RegisterBegin": "41501",
+            "SlaveId": "1",
+            "Results": [
+                {
+                    "Addr": "41501",
+                    "Alias": "4150100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41502",
+                    "Alias": "4150200",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41503",
+                    "Alias": "4150300",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41504",
+                    "Alias": "4150400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41505",
+                    "Alias": "4150500",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41506",
+                    "Alias": "4150600",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41507",
+                    "Alias": "4150700",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41508",
+                    "Alias": "4150800",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41509",
+                    "Alias": "4150900",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41510",
+                    "Alias": "4151000",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41511",
+                    "Alias": "4151100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41512",
+                    "Alias": "4151200",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41513",
+                    "Alias": "4151300",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41514",
+                    "Alias": "4151400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41515",
+                    "Alias": "4151500",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41516",
+                    "Alias": "4151600",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41517",
+                    "Alias": "4151700",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41518",
+                    "Alias": "4151800",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41519",
+                    "Alias": "4151900",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41520",
+                    "Alias": "4152000",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41521",
+                    "Alias": "4152100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41522",
+                    "Alias": "4152200",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41523",
+                    "Alias": "4152300",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41524",
+                    "Alias": "4152400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41525",
+                    "Alias": "4152500",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41526",
+                    "Alias": "4152600",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41527",
+                    "Alias": "4152700",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41528",
+                    "Alias": "4152800",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41529",
+                    "Alias": "4152900",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41530",
+                    "Alias": "4153000",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41531",
+                    "Alias": "4153100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41532",
+                    "Alias": "4153200",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41533",
+                    "Alias": "4153300",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41534",
+                    "Alias": "4153400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41535",
+                    "Alias": "4153500",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41536",
+                    "Alias": "4153600",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41537",
+                    "Alias": "4153700",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41538",
+                    "Alias": "4153800",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41539",
+                    "Alias": "4153900",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41540",
+                    "Alias": "4154000",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41541",
+                    "Alias": "4154100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41542",
+                    "Alias": "4154200",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41543",
+                    "Alias": "4154300",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41544",
+                    "Alias": "4154400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41545",
+                    "Alias": "4154500",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41546",
+                    "Alias": "4154600",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41547",
+                    "Alias": "4154700",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41548",
+                    "Alias": "4154800",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41549",
+                    "Alias": "4154900",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41550",
+                    "Alias": "4155000",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41551",
+                    "Alias": "4155100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41552",
+                    "Alias": "4155200",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41553",
+                    "Alias": "4155300",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41554",
+                    "Alias": "4155400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41555",
+                    "Alias": "4155500",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41556",
+                    "Alias": "4155600",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41557",
+                    "Alias": "4155700",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41558",
+                    "Alias": "4155800",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41559",
+                    "Alias": "4155900",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41560",
+                    "Alias": "4156000",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                },
+                {
+                    "Addr": "41561",
+                    "Alias": "4156100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "2"
+                }
+            ]
+        },
+        {
+            "DataLen": "61",
+            "DevName": "1301",
+            "FunCode": "3",
+            "RegisterBegin": "41601",
+            "SlaveId": "1",
+            "Results": [
+                {
+                    "Addr": "41601",
+                    "Alias": "4160100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41602",
+                    "Alias": "4160200",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41603",
+                    "Alias": "4160300",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41604",
+                    "Alias": "4160400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41605",
+                    "Alias": "4160500",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41606",
+                    "Alias": "4160600",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41607",
+                    "Alias": "4160700",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41608",
+                    "Alias": "4160800",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41609",
+                    "Alias": "4160900",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41610",
+                    "Alias": "4161000",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41611",
+                    "Alias": "4161100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41612",
+                    "Alias": "4161200",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41613",
+                    "Alias": "4161300",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41614",
+                    "Alias": "4161400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41615",
+                    "Alias": "4161500",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41616",
+                    "Alias": "4161600",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41617",
+                    "Alias": "4161700",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41618",
+                    "Alias": "4161800",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41619",
+                    "Alias": "4161900",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41620",
+                    "Alias": "4162000",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41621",
+                    "Alias": "4162100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41622",
+                    "Alias": "4162200",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41623",
+                    "Alias": "4162300",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41624",
+                    "Alias": "4162400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41625",
+                    "Alias": "4162500",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41626",
+                    "Alias": "4162600",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41627",
+                    "Alias": "4162700",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41628",
+                    "Alias": "4162800",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41629",
+                    "Alias": "4162900",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41630",
+                    "Alias": "4163000",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41631",
+                    "Alias": "4163100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41632",
+                    "Alias": "4163200",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41633",
+                    "Alias": "4163300",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41634",
+                    "Alias": "4163400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41635",
+                    "Alias": "4163500",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41636",
+                    "Alias": "4163600",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41637",
+                    "Alias": "4163700",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41638",
+                    "Alias": "4163800",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41639",
+                    "Alias": "4163900",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41640",
+                    "Alias": "4164000",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41641",
+                    "Alias": "4164100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41642",
+                    "Alias": "4164200",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41643",
+                    "Alias": "4164300",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41644",
+                    "Alias": "4164400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41645",
+                    "Alias": "4164500",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41646",
+                    "Alias": "4164600",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41647",
+                    "Alias": "4164700",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41648",
+                    "Alias": "4164800",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41649",
+                    "Alias": "4164900",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41650",
+                    "Alias": "4165000",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41651",
+                    "Alias": "4165100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41652",
+                    "Alias": "4165200",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41653",
+                    "Alias": "4165300",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41654",
+                    "Alias": "4165400",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41655",
+                    "Alias": "4165500",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41656",
+                    "Alias": "4165600",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41657",
+                    "Alias": "4165700",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41658",
+                    "Alias": "4165800",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41659",
+                    "Alias": "4165900",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41660",
+                    "Alias": "4166000",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                },
+                {
+                    "Addr": "41661",
+                    "Alias": "4166100",
+                    "Coefficient": "0,1,0",
+                    "DataLen": "1",
+                    "DataTypeRegister": "1"
+                }
+            ]
+        }
+    ],
+    "WayUid": "1575876387"
+}
