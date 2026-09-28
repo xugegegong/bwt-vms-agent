@@ -78,7 +78,10 @@
 
 ## 仓库位置
 
-`D:\gitlab\bwt-inland-feature\bwt-inland-feature\bwt-vms-agent\`
+- **GitHub 私有仓库**：`git@github.com:xugegegong/bwt-vms-agent.git`（2026-09-28 首次推送，101 文件 / 0.2MB）
+- 本地路径：`D:\gitlab\bwt-inland-feature\bwt-inland-feature\bwt-vms-agent\`
+- **公司代码不在仓库里**，由 F 单独发压缩包；智能体需要读代码时先向交付人员要
+- 分发规则见 `打包与上传清单.md`；凭据获取见 `knowledge/凭据获取说明.md`
 
 ## 阅读指引
 
