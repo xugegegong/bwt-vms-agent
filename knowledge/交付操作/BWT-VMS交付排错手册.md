@@ -1,6 +1,6 @@
 # BWT-VMS 交付排错手册
 
-> 更新日期:2026-09-24(条目5升级为三层诊断+新增条目13通导路由)(修改本文档后请同步更新此日期,并到 Dify 知识库重新上传该文件)
+> 更新日期:2026-11-10(新增条目14:整栈启动CPU占满——JVM堆超容器限额引发的swap风暴)(修改本文档后请同步更新此日期,并到 Dify 知识库重新上传该文件)
 
 > 给交付/实施人员的排错手册:**不用看代码**,按症状找到条目,复制命令执行。
 > 每条格式:症状 → 原因(一句话) → 定位 → 修复 → 验证。
@@ -172,6 +172,29 @@
   ```
 - **验证**:Redis `list:ship:{shipId}:navigation` 出值;前端通导页显示
 - **注意**:device_key 前缀 11+设备号(GPS=01/GYRO=05/AIS=03/风速仪=06/测深仪=04/舵=13);1103001~1103010 是 AIS 通道(AIS_OWN_*),别和 GPS/GYRO 混淆
+
+---
+
+## 14. 整栈 docker compose 启动后:没有数据但 CPU/负载被打满
+
+- **症状**:`docker compose up` 整套服务后,船端无数据进来,但服务器 load 一路飙高(几十到上百),SSH 都变卡
+- **原因**:`system` 服务的 `start.sh` 里 JVM 堆参数 `-Xms4096m -Xmx4096m`(4G 堆,且 Xms=Xmx 启动即占满),远超其容器内存限额(2560M),也超过整机物理内存 → 启动即触发 swap 换页风暴 → nacos/redis/mysql 全部响应超时 → system(报"数据源 url 缺失")、dataflow(报 Redis 命令超时)启动失败 → `restart: always` 无限重启 → 负载雪崩。**日志里的报错是假根因,真凶是内存**
+- **定位**(三步,顺序别乱):
+  1. `docker ps --format '{{.Names}}\t{{.Status}}'` 看有没有 `Restarting` 或秒级/分钟级 `Up` 的容器 → 有就是崩溃-重启循环(docker stats 里 CPU 大户轮换也是这个特征)
+  2. `top -b -n1` 看 **wa 列**:load 高但 wa 占 60%+ → 是磁盘/swap 风暴,不是算力不够,别去加 CPU;`free -h` 看 swap 用量
+  3. `grep -H 'Xmx' /opt/iCommander/*/start.sh` 逐个检查 JVM 堆:谁家 `-Xmx` 超过它 compose 里 `deploy.resources.limits.memory` 的一半,谁就是元凶
+- **修复**:
+  ```bash
+  cp /opt/iCommander/system/start.sh /opt/iCommander/system/start.sh.bak
+  sed -i 's/-Xms4096m -Xmx4096m/-Xms348m -Xmx1024m/' /opt/iCommander/system/start.sh
+  docker update --restart=no system dataflow   # 先止血防循环(按实际循环的容器改)
+  docker stop system dataflow && docker start system dataflow
+  docker update --restart=always system dataflow
+  ```
+- **验证**:`docker logs system` 出现 `Tomcat started on port(s): 8085`,dataflow 出现 8102;`uptime` 负载持续回落;`docker stats` 各容器 CPU 个位数
+- **判别要点**:依赖报错(数据源缺失/Redis 超时)≠ 真配置问题。**先把机器救活再复测**——system 日志里"initialization completed in 1154375 ms"(19 分钟)这种启动耗时本身就是机器被拖死的铁证。本案 dataflow 复测后直接起来了,配置从头到尾没动
+- **通用预防**:每个 JVM 服务的 `-Xmx` ≤ 容器内存限额的一半(给 metaspace/栈/堆外留量);`Xms` 别等于 `Xmx`;compose 里 `memswap_limit: -1` 意味着超限随便进 swap,小内存机器上慎用;全栈同时冷启动前先心算一遍各容器限额总和 vs 物理内存(本例限额加起来 ~15G,机器只有 7.4G,永久超卖,数据量上来还会紧张)
+- **详细复盘**(含完整排查时间线与每步 why):见同目录 `现场排错-compose整栈启动CPU占满.md`
 
 ---
 
