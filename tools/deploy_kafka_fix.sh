@@ -11,6 +11,7 @@
 # 用法:  bash deploy_kafka_fix.sh              # 部署(可重复执行,幂等)
 #        bash deploy_kafka_fix.sh rollback     # 回滚全部改动
 #        bash deploy_kafka_fix.sh status       # 只查看当前状态,不改任何东西
+#        bash deploy_kafka_fix.sh reset        # 消费位点跳到最新(不删数据,安全的"重新开始")
 #
 # 前提: root 执行;docker 已装;kafka 容器在跑;老算法栈(datareceive-analysis 在消费 makeup)
 # 注意: 部署过程会重启一次 kafka 容器(改 broker 配置必须重启才生效),
@@ -212,6 +213,35 @@ set_retention() {
     log "kafka 已恢复(耗时约 $((i*5)) 秒)"
 }
 
+# ---------- 位点重置(不删数据的安全"重新开始") ----------
+reset_offsets() {
+    log "重置模式:停消费者 → 位点跳到最新 → 重启。不删除任何 Kafka 数据"
+    docker stop "$CONSUMER_CTN" >/dev/null
+    log "等待消费组会话超时(约40秒,组内成员掉线后 reset 才被允许)..."
+    sleep 40
+    local topics
+    topics=$(docker exec "$KAFKA_CTN" timeout 30 "$KAFKA_BIN/kafka-topics.sh" --list --zookeeper localhost:2181 2>/dev/null | grep 'data-org-makeup$')
+    if [ -n "$topics" ]; then
+        for t in $topics; do
+            for i in 1 2 3; do
+                out=$(docker exec "$KAFKA_CTN" timeout 45 "$KAFKA_BIN/kafka-consumer-groups.sh" \
+                    --bootstrap-server localhost:9092 --group "$CONSUMER_GROUP" --topic "$t" \
+                    --reset-offsets --to-latest --execute 2>&1)
+                if echo "$out" | grep -q "NEW-OFFSET"; then
+                    log "已重置 $t → 最新位点"
+                    break
+                fi
+                sleep 15
+            done
+        done
+    else
+        warn "没有 makeup topic(可能从未有数据),仅重启消费者"
+    fi
+    docker start "$CONSUMER_CTN" >/dev/null
+    rm -f "$STATE"
+    log "完成:消费者从最新数据开始消费;历史数据未删除,保留窗口内数据仍可查"
+}
+
 # ---------- 状态查看 / 回滚 ----------
 show_status() {
     echo "== 看门狗 =="
@@ -255,5 +285,6 @@ case "${1:-deploy}" in
         ;;
     rollback) detect_env >/dev/null 2>&1; rollback ;;
     status)   detect_env >/dev/null 2>&1; show_status ;;
-    *) echo "用法: bash $0 [deploy|rollback|status]"; exit 1 ;;
+    reset)    detect_env; reset_offsets ;;
+    *) echo "用法: bash $0 [deploy|rollback|status|reset]"; exit 1 ;;
 esac
