@@ -71,9 +71,13 @@ install_watchdog() {
     log "部署看门狗 -> $WATCHDOG_PATH"
     cat > "$WATCHDOG_PATH" << WDEOF
 #!/bin/bash
-# kafka_lag_watchdog.sh — 数据流看门狗(deploy_kafka_fix.sh 生成)
-# 逻辑: 不盯进程死活(容器restart:always已管),盯消费位点头;
-#       生产端有新数据 而 消费位点连续${STALL_LIMIT}分钟不动 => 重启消费容器
+# kafka_lag_watchdog.sh — 数据流看门狗 v2(deploy_kafka_fix.sh 生成)
+# 逻辑: 盯数据流,不盯进程死活(容器restart:always已管)
+#   生产端水位(所有 makeup topic 最新位点,GetOffsetShell 查,不依赖消费组)
+#   在增长 而 消费位点(消费组已提交位点)连续${STALL_LIMIT}分钟不动/查不到
+#   => 重启消费容器
+# v2 修复盲区: 消费停摆超过 offsets.retention(默认24h)后消费组位点会被Kafka删除,
+#              describe 查不到任何行 → v1 永远 stall=0 不触发;v2 把"查不到"也算停滞
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 GROUP=${CONSUMER_GROUP}
 CONSUMER_CONTAINER=${CONSUMER_CTN}
@@ -81,26 +85,41 @@ STATE=${STATE}
 LOG=${LOG}
 STALL_LIMIT=${STALL_LIMIT}
 KBIN=${KAFKA_BIN}
+KCTN=${KAFKA_CTN}
 
 # flock 防止上一轮没跑完又叠加
 exec 9>${LOCK}
 flock -n 9 || exit 0
 
 now="\$(date '+%F %T')"
-out=""
+
+# ① 生产端水位:所有 makeup topic 的最新位点之和(与消费组状态无关)
+topics=\$(docker exec \$KCTN timeout 30 \$KBIN/kafka-topics.sh --list --zookeeper localhost:2181 2>/dev/null | grep 'data-org-makeup\$')
+end=0
+for t in \$topics; do
+    r=""
+    for i in 1 2; do
+        r=\$(docker exec \$KCTN timeout 30 \$KBIN/kafka-run-class.sh kafka.tools.GetOffsetShell \\
+            --broker-list localhost:9092 --topic "\$t" --time -1 2>/dev/null | awk -F: '{s+=\$NF} END {print s+0}')
+        [ -n "\$r" ] && break
+        sleep 2
+    done
+    end=\$((end + \${r:-0}))
+done
+
+# ② 消费位点:消费组已提交位点之和(0=组位点已过期被删或从未提交)
+cur=""
 for i in 1 2 3; do
-    out=\$(docker exec ${KAFKA_CTN} timeout 45 \$KBIN/kafka-consumer-groups.sh \\
+    cur=\$(docker exec \$KCTN timeout 45 \$KBIN/kafka-consumer-groups.sh \\
         --bootstrap-server localhost:9092 --describe --group "\$GROUP" 2>/dev/null | \\
-        awk '\$1 ~ /data-org-makeup/ {cur+=\$3; end+=\$4} END {print cur, end}')
-    [ -n "\$out" ] && break
+        awk '\$1 ~ /data-org-makeup/ {c+=\$3} END {print c+0}')
+    [ -n "\$cur" ] && break
     sleep 2
 done
-if [ -z "\$out" ] || [ "\$out" = "  " ]; then
-    echo "\$now describe查询失败或超时,跳过本轮" >> \$LOG
+if [ -z "\$cur" ]; then
+    echo "\$now describe查询失败或超时,跳过本轮(生产端水位end=\$end)" >> \$LOG
     exit 0
 fi
-cur=\$(echo \$out | awk '{print \$1}')
-end=\$(echo \$out | awk '{print \$2}')
 
 prev=\$(cat \$STATE 2>/dev/null)
 prev_cur=\$(echo \"\$prev\" | awk '{print \$1}')
@@ -111,7 +130,7 @@ stall=\$(echo \"\$prev\" | awk '{print \$3}')
 if [ "\$end" == "\$prev_end" ]; then
     stall=0            # 生产端没新数据,不算卡死(无数据环境正常)
 elif [ "\$cur" == "\$prev_cur" ]; then
-    stall=\$((stall + 1))
+    stall=\$((stall + 1))   # 位点不动,或组位点已被删(0==0),都算停滞
 else
     stall=0
 fi
