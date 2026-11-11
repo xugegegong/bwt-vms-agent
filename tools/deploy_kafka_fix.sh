@@ -123,9 +123,9 @@ if [ -z "\$cur" ]; then
 fi
 
 prev=\$(cat \$STATE 2>/dev/null)
-prev_cur=\$(echo \"\$prev\" | awk '{print \$1}')
-prev_end=\$(echo \"\$prev\" | awk '{print \$2}')
-stall=\$(echo \"\$prev\" | awk '{print \$3}')
+prev_cur=\$(echo "\$prev" | awk '{print \$1}')
+prev_end=\$(echo "\$prev" | awk '{print \$2}')
+stall=\$(echo "\$prev" | awk '{print \$3}')
 [ -z "\$stall" ] && stall=0
 
 if [ "\$end" == "\$prev_end" ]; then
