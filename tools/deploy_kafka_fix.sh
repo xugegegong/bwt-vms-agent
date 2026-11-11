@@ -278,6 +278,11 @@ case "${1:-deploy}" in
         detect_env
         install_watchdog
         set_retention
+        # kafka 重启可能触发过期消费组清理(停摆>24h的组会被删),顺手重启消费者
+        # 清除历史卡死状态;新组按 earliest 从保留窗口起点开始消费
+        log "重启消费容器 $CONSUMER_CTN(清除可能的卡死状态,立即恢复消费)"
+        docker restart "$CONSUMER_CTN" >/dev/null 2>&1 || true
+        rm -f "$STATE"
         echo
         log "部署完成。日常观察: tail -f $LOG"
         log "看门狗每次自愈会记录一行 '!!! 重启';位点不动${STALL_LIMIT}分钟即触发"
