@@ -291,7 +291,24 @@ set_retention() {
         [ -n "$r" ] && ok=1 && break
     done
     [ -n "$ok" ] || die "kafka 重启后 200 秒内未恢复,请人工检查 docker logs $KAFKA_CTN"
-    log "kafka 已恢复(耗时约 $((i*5)) 秒)"
+    log "broker 已恢复(耗时约 $((i*5)) 秒)"
+
+    # 继续等组协调器就绪:光看broker能答offset不够(2026-11-25现场:脚本结束后system
+    # 立刻刷 'Group coordinator ... id:2147483647 unavailable' 和
+    # 'This server does not host this topic-partition' 共2~3分钟)。
+    # 判据:describe 任一消费组能在30秒内返回(组不存在也是有效响应,超时才算未就绪)
+    local coord_ok=""
+    for j in $(seq 1 12); do
+        cg=$(docker exec "$KAFKA_CTN" timeout 30 "$KAFKA_BIN/kafka-consumer-groups.sh" \
+            --bootstrap-server localhost:9092 --describe --group "$CONSUMER_GROUP" 2>&1)
+        if [ -n "$cg" ]; then coord_ok=1; break; fi
+        sleep 5
+    done
+    if [ -n "$coord_ok" ]; then
+        log "组协调器已就绪(追加约 $((j*5-5)) 秒),消费者重连风暴应不再出现"
+    else
+        warn "组协调器 60 秒内仍不可用,system 等消费者可能短暂报 coordinator 错误,通常数分钟自愈"
+    fi
 }
 
 # ---------- 位点重置(不删数据的安全"重新开始") ----------
