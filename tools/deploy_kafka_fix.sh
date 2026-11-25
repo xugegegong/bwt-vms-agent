@@ -1,12 +1,17 @@
 #!/bin/bash
-# deploy_kafka_fix.sh — 老算法环境(船端) Kafka 实时链路修复 一键部署脚本
+# deploy_kafka_fix.sh — 老算法环境(船端) Kafka实时链路 + nacos 修复 一键部署脚本
 # 兼容 Ubuntu(测试环境) / RHEL CentOS 8(现场)
 #
-# 解决问题: 消费进程"活着但内部卡死"导致实时数据中断,现场只能人工清Kafka+重启恢复
-# 修复内容(两件):
-#   ① LAG 看门狗: 每分钟检查 makeup 消费组位点,生产端有数据而位点连续5分钟不动
-#      → 自动重启消费容器(实验环境实测:故障→自愈5分钟,零人工)
-#   ② broker retention 15分钟 → 24小时(消费端可停更久,不会因停摆>15min丢位点上下文)
+# 解决问题:
+#   ① 消费进程"活着但内部卡死"导致实时数据中断,现场只能人工清Kafka+重启恢复
+#   ② nacos 1.1.4 偶尔半死(健康检查正常但配置接口不响应),system连不上nacos,
+#      必须人工先重启nacos再重启system才恢复
+# 修复内容:
+#   ① LAG看门狗: makeup消费组位点停滞5分钟 → 自动重启消费容器
+#   ② broker retention 15分钟 → 24小时
+#   ③ nacos看门狗(合并在同一看门狗脚本): 每分钟探测真实配置接口(健康检查会骗人),
+#      连续3次失败 → 自动重启nacos → 等readiness真通过 → 等60秒验证system自愈
+#      (127实测:nacos恢复后system约100秒自动重连重注册,无需重启system,只有没回来才兜底重启)
 #
 # 用法:  bash deploy_kafka_fix.sh              # 部署(可重复执行,幂等)
 #        bash deploy_kafka_fix.sh rollback     # 回滚全部改动
@@ -33,6 +38,15 @@ PIDFILE=/var/tmp/kafka_watchdog_loop.pid
 CONSUMER_GROUP=makeup_data
 STALL_LIMIT=5                    # 连续停滞分钟数阈值
 SERVER_PROPS_BAK=/tmp/server.properties.bak.$(date +%s)
+
+# ---- nacos 看门狗参数 ----
+# 探针用真实配置接口(/v1/cs/configs 在 nacos.security.ignore.urls 内,免鉴权),
+# 不用健康检查端点(1.1.4 健康检查只验JVM,验不出半死)
+NACOS_PROBE_URL="http://nacos.hbluewhale.com:8848/nacos/v1/cs/configs?dataId=datasource.yml&group=DEFAULT_GROUP&tenant=b49aa71c-0566-43dc-a6a3-ad765e39a376"
+NACOS_FAIL_LIMIT=3               # 连续失败次数阈值(分钟)
+NACOS_COOLDOWN_SEC=1800          # 重启后冷却30分钟,防重启风暴
+NACOS_STATE=/var/tmp/nacos_watchdog.state
+NACOS_COOLDOWN=/var/tmp/nacos_watchdog.cooldown
 
 log()  { echo -e "\033[32m[deploy]\033[0m $*"; }
 warn() { echo -e "\033[33m[警告]\033[0m $*" >&2; }
@@ -61,6 +75,13 @@ detect_env() {
     # 宿主机侧 kafka 目录(现场统一路径,不做探测)
     [ -d "$KAFKA_DIR" ] || die "宿主机不存在 $KAFKA_DIR(看门狗的安装目录)"
 
+    # nacos 容器(看门狗第二守护对象)
+    NACOS_CTN=$(docker ps --format '{{.Names}}' | grep -m1 -ix 'nacos')
+    [ -z "$NACOS_CTN" ] && NACOS_CTN=$(docker ps --format '{{.Names}}' | grep -m1 -i nacos)
+    [ -n "$NACOS_CTN" ] || die "找不到 nacos 容器"
+    log "nacos 容器(看门狗守护对象): $NACOS_CTN"
+    log "nacos 探针: $(timeout 8 curl -s -m 5 -o /dev/null -w '%{http_code}' "$NACOS_PROBE_URL" 2>/dev/null || echo 超时)  (期望200)"
+
     # 磁盘体检: 24h retention 每船约 700MB/天,预留不足要提醒
     AVAIL_GB=$(df -BG / | awk 'NR==2 {gsub("G","",$4); print $4}')
     log "磁盘可用: ${AVAIL_GB}G"
@@ -72,13 +93,11 @@ install_watchdog() {
     log "部署看门狗 -> $WATCHDOG_PATH"
     cat > "$WATCHDOG_PATH" << WDEOF
 #!/bin/bash
-# kafka_lag_watchdog.sh — 数据流看门狗 v2(deploy_kafka_fix.sh 生成)
-# 逻辑: 盯数据流,不盯进程死活(容器restart:always已管)
-#   生产端水位(所有 makeup topic 最新位点,GetOffsetShell 查,不依赖消费组)
-#   在增长 而 消费位点(消费组已提交位点)连续${STALL_LIMIT}分钟不动/查不到
-#   => 重启消费容器
-# v2 修复盲区: 消费停摆超过 offsets.retention(默认24h)后消费组位点会被Kafka删除,
-#              describe 查不到任何行 → v1 永远 stall=0 不触发;v2 把"查不到"也算停滞
+# kafka_lag_watchdog.sh — 服务看门狗 v3(deploy_kafka_fix.sh 生成)
+# ① kafka: 生产端水位在涨 而 消费位点连续${STALL_LIMIT}分钟不动/查不到 => 重启消费容器
+# ② nacos: 真实配置接口连续${NACOS_FAIL_LIMIT}次失败 => 重启nacos,等ready后重启依赖方
+# 设计原则: 盯真实业务接口,不盯进程死活(容器restart:always已管);
+#           健康检查端点会骗人(1.1.4半死时健康检查照样通过),探针必须走配置接口
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 GROUP=${CONSUMER_GROUP}
 CONSUMER_CONTAINER=${CONSUMER_CTN}
@@ -87,6 +106,12 @@ LOG=${LOG}
 STALL_LIMIT=${STALL_LIMIT}
 KBIN=${KAFKA_BIN}
 KCTN=${KAFKA_CTN}
+NACOS_CTN=${NACOS_CTN}
+NPROBE="${NACOS_PROBE_URL}"
+NFAIL_LIMIT=${NACOS_FAIL_LIMIT}
+NCOOLDOWN_SEC=${NACOS_COOLDOWN_SEC}
+NSTATE=${NACOS_STATE}
+NCOOLDOWN=${NACOS_COOLDOWN}
 
 # flock 防止上一轮没跑完又叠加
 exec 9>${LOCK}
@@ -94,55 +119,110 @@ flock -n 9 || exit 0
 
 now="\$(date '+%F %T')"
 
-# ① 生产端水位:所有 makeup topic 的最新位点之和(与消费组状态无关)
-topics=\$(docker exec \$KCTN timeout 30 \$KBIN/kafka-topics.sh --list --zookeeper localhost:2181 2>/dev/null | grep 'data-org-makeup\$')
-end=0
-for t in \$topics; do
-    r=""
-    for i in 1 2; do
-        r=\$(docker exec \$KCTN timeout 30 \$KBIN/kafka-run-class.sh kafka.tools.GetOffsetShell \\
-            --broker-list localhost:9092 --topic "\$t" --time -1 2>/dev/null | awk -F: '{s+=\$NF} END {print s+0}')
-        [ -n "\$r" ] && break
+check_kafka() {
+    # ① 生产端水位:所有 makeup topic 的最新位点之和(与消费组状态无关)
+    topics=\$(docker exec \$KCTN timeout 30 \$KBIN/kafka-topics.sh --list --zookeeper localhost:2181 2>/dev/null | grep 'data-org-makeup\$')
+    end=0
+    for t in \$topics; do
+        r=""
+        for i in 1 2; do
+            r=\$(docker exec \$KCTN timeout 30 \$KBIN/kafka-run-class.sh kafka.tools.GetOffsetShell \\
+                --broker-list localhost:9092 --topic "\$t" --time -1 2>/dev/null | awk -F: '{s+=\$NF} END {print s+0}')
+            [ -n "\$r" ] && break
+            sleep 2
+        done
+        end=\$((end + \${r:-0}))
+    done
+
+    # ② 消费位点:消费组已提交位点之和(0=组位点已过期被删或从未提交)
+    cur=""
+    for i in 1 2 3; do
+        cur=\$(docker exec \$KCTN timeout 45 \$KBIN/kafka-consumer-groups.sh \\
+            --bootstrap-server localhost:9092 --describe --group "\$GROUP" 2>/dev/null | \\
+            awk '\$1 ~ /data-org-makeup/ {c+=\$3} END {print c+0}')
+        [ -n "\$cur" ] && break
         sleep 2
     done
-    end=\$((end + \${r:-0}))
-done
+    if [ -z "\$cur" ]; then
+        echo "\$now describe查询失败或超时,跳过本轮(生产端水位end=\$end)" >> \$LOG
+        return 0
+    fi
 
-# ② 消费位点:消费组已提交位点之和(0=组位点已过期被删或从未提交)
-cur=""
-for i in 1 2 3; do
-    cur=\$(docker exec \$KCTN timeout 45 \$KBIN/kafka-consumer-groups.sh \\
-        --bootstrap-server localhost:9092 --describe --group "\$GROUP" 2>/dev/null | \\
-        awk '\$1 ~ /data-org-makeup/ {c+=\$3} END {print c+0}')
-    [ -n "\$cur" ] && break
-    sleep 2
-done
-if [ -z "\$cur" ]; then
-    echo "\$now describe查询失败或超时,跳过本轮(生产端水位end=\$end)" >> \$LOG
-    exit 0
-fi
+    prev=\$(cat \$STATE 2>/dev/null)
+    prev_cur=\$(echo "\$prev" | awk '{print \$1}')
+    prev_end=\$(echo "\$prev" | awk '{print \$2}')
+    stall=\$(echo "\$prev" | awk '{print \$3}')
+    [ -z "\$stall" ] && stall=0
 
-prev=\$(cat \$STATE 2>/dev/null)
-prev_cur=\$(echo "\$prev" | awk '{print \$1}')
-prev_end=\$(echo "\$prev" | awk '{print \$2}')
-stall=\$(echo "\$prev" | awk '{print \$3}')
-[ -z "\$stall" ] && stall=0
+    if [ "\$end" == "\$prev_end" ]; then
+        stall=0            # 生产端没新数据,不算卡死(无数据环境正常)
+    elif [ "\$cur" == "\$prev_cur" ]; then
+        stall=\$((stall + 1))   # 位点不动,或组位点已被删(0==0),都算停滞
+    else
+        stall=0
+    fi
+    echo "\$cur \$end \$stall" > \$STATE
+    echo "\$now cur=\$cur end=\$end stall=\$stall" >> \$LOG
 
-if [ "\$end" == "\$prev_end" ]; then
-    stall=0            # 生产端没新数据,不算卡死(无数据环境正常)
-elif [ "\$cur" == "\$prev_cur" ]; then
-    stall=\$((stall + 1))   # 位点不动,或组位点已被删(0==0),都算停滞
-else
-    stall=0
-fi
-echo "\$cur \$end \$stall" > \$STATE
-echo "\$now cur=\$cur end=\$end stall=\$stall" >> \$LOG
+    if [ "\$stall" -ge "\$STALL_LIMIT" ]; then
+        echo "\$now !!! 重启 \$CONSUMER_CONTAINER (位点停滞\${stall}分钟, LAG=\$((end-cur)))" >> \$LOG
+        docker restart "\$CONSUMER_CONTAINER" >> \$LOG 2>&1
+        echo "0 0 0" > \$STATE
+    fi
+}
 
-if [ "\$stall" -ge "\$STALL_LIMIT" ]; then
-    echo "\$now !!! 重启 \$CONSUMER_CONTAINER (位点停滞\${stall}分钟, LAG=\$((end-cur)))" >> \$LOG
-    docker restart "\$CONSUMER_CONTAINER" >> \$LOG 2>&1
-    echo "0 0 0" > \$STATE
-fi
+check_nacos() {
+    NCODE=\$(curl -s -m 5 -o /dev/null -w '%{http_code}' "\$NPROBE" 2>/dev/null)
+    NFAIL=\$(cat \$NSTATE 2>/dev/null)
+    [ -z "\$NFAIL" ] && NFAIL=0
+    COOL=\$(cat \$NCOOLDOWN 2>/dev/null)
+    [ -z "\$COOL" ] && COOL=0
+
+    if [ "\$NCODE" == "200" ]; then
+        [ "\$NFAIL" -gt 0 ] && echo "\$now [nacos] 探针恢复200" >> \$LOG
+        echo 0 > \$NSTATE
+        return 0
+    fi
+
+    echo "\$now [nacos] 探针失败<\${NCODE:-超时}>,连续失败=\$NFAIL" >> \$LOG
+    if [ "\$(date +%s)" -lt "\$COOL" ]; then
+        echo "\$now [nacos] 冷却期内(剩 \$(( (COOL - \$(date +%s)) / 60 ))分钟),不动作" >> \$LOG
+        return 0
+    fi
+    NFAIL=\$((NFAIL + 1))
+    echo "\$NFAIL" > \$NSTATE
+    if [ "\$NFAIL" -ge "\$NFAIL_LIMIT" ]; then
+        echo "\$now !!! [nacos] 配置接口连续\${NFAIL}次失败,重启 \$NACOS_CTN" >> \$LOG
+        docker restart "\$NACOS_CTN" >> \$LOG 2>&1
+        ready=0
+        for i in \$(seq 1 60); do
+            sleep 2
+            c=\$(curl -s -m 3 -o /dev/null -w '%{http_code}' "\$NPROBE" 2>/dev/null)
+            [ "\$c" == "200" ] && ready=1 && break
+        done
+        echo \$(( \$(date +%s) + NCOOLDOWN_SEC )) > \$NCOOLDOWN
+        echo 0 > \$NSTATE
+        if [ "\$ready" == "1" ]; then
+            # 2026-11-25 127实测: nacos恢复后system的nacos-client会自动重连重注册(约100秒),
+            # gateway路由自动恢复,无需重启system(重启一次要十几分钟)。先等60秒探注册状态,
+            # 只有确实没回来才兜底重启。
+            echo "\$now [nacos] 已恢复(约 \$((i*2)) 秒),等待60秒验证依赖方自愈..." >> \$LOG
+            sleep 60
+            inst=\$(curl -s -m 5 "http://nacos.hbluewhale.com:8848/nacos/v1/ns/instance/list?serviceName=bwt-vms-system&namespaceId=b49aa71c-0566-43dc-a6a3-ad765e39a376" 2>/dev/null)
+            if echo "\$inst" | grep -q '"healthy":true'; then
+                echo "\$now [nacos] system 已自愈(重新注册healthy),跳过重启" >> \$LOG
+            else
+                echo "\$now !!! [nacos] system 未重新注册,兜底重启 system" >> \$LOG
+                docker restart system >> \$LOG 2>&1
+            fi
+        else
+            echo "\$now !!! [nacos] 重启后120秒探针仍未恢复,请人工检查" >> \$LOG
+        fi
+    fi
+}
+
+check_kafka
+check_nacos
 WDEOF
     chmod +x "$WATCHDOG_PATH"
     bash -n "$WATCHDOG_PATH" || die "看门狗脚本语法错误"
@@ -184,7 +264,8 @@ LEOF
 
     # 手动跑一轮验证
     bash "$WATCHDOG_PATH"
-    log "首轮自检: $(cat $STATE 2>/dev/null)  (cur=已消费位点 end=最新位点 stall=停滞计数)"
+    log "首轮自检: kafka位点=$(cat $STATE 2>/dev/null)  (cur=已消费 end=最新 stall=停滞计数)"
+    log "首轮自检: nacos探针=$(timeout 8 curl -s -m 5 -o /dev/null -w '%{http_code}' "$NACOS_PROBE_URL" 2>/dev/null || echo 超时)  (期望200)"
 }
 
 # ---------- ② 修改 retention 并重启 kafka ----------
@@ -248,9 +329,11 @@ show_status() {
     [ -f "$WATCHDOG_PATH" ] && echo "已安装: $WATCHDOG_PATH" || echo "未安装"
     if [ -f "$CROND_FILE" ]; then echo "定时: $CROND_FILE"; cat "$CROND_FILE"; fi
     [ -f "$PIDFILE" ] && echo "定时: 后台循环(pid=$(cat $PIDFILE))"
-    [ -f "$LOG" ] && tail -3 "$LOG"
+    [ -f "$LOG" ] && tail -5 "$LOG"
     echo "== kafka retention =="
     docker exec "$KAFKA_CTN" grep -E '^log.retention.(minutes|bytes)' "$SERVER_PROPS" 2>/dev/null || echo "未配置(默认168h)"
+    echo "== nacos 探针 =="
+    echo "HTTP $(timeout 8 curl -s -m 5 -o /dev/null -w '%{http_code}' "$NACOS_PROBE_URL" 2>/dev/null || echo 超时)  (期望200)  冷却状态: $(cat $NACOS_COOLDOWN 2>/dev/null || echo 无)"
     df -BG / | tail -1
 }
 
@@ -258,7 +341,7 @@ rollback() {
     log "回滚: 移除定时"
     rm -f "$CROND_FILE"
     if [ -f "$PIDFILE" ]; then kill "$(cat $PIDFILE)" 2>/dev/null; rm -f "$PIDFILE"; fi
-    rm -f "$WATCHDOG_PATH" "$LOOP_PATH" "$STATE" "$LOCK"
+    rm -f "$WATCHDOG_PATH" "$LOOP_PATH" "$STATE" "$LOCK" "$NACOS_STATE" "$NACOS_COOLDOWN"
     rm -f /opt/kafka_lag_watchdog.sh /opt/kafka_lag_watchdog_loop.sh   # 旧版位置兜底清理
     if command -v crontab >/dev/null 2>&1; then
         (crontab -l 2>/dev/null | grep -v 'kafka_lag_watchdog') | crontab - 2>/dev/null || true
