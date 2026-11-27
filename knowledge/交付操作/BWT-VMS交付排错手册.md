@@ -208,19 +208,32 @@
      `docker exec system sh -c 'J=$(pgrep java); JP=$(readlink -f /proc/$J/exe); $(dirname $JP)/jmap -histo $J | head -40'`
      —— 出现 `SpeedPlanningNaryTree$TreeNode` 数百万实例、且 Long/Double/ArrayList 1:1:1 同步增长 = 命中
   3. `docker logs system | grep -E '航速优化|规划航段数量|规划转速列表'` —— 出现"规划航段数量:N"即正在建树
-- **修复**(不改代码的运维方案,已实船验证):
-  ```sql
-  -- 备份
-  CREATE TABLE IF NOT EXISTS tab_ship_info_extend_bak_YYYYMMDD AS
-  SELECT * FROM vms_sys_db.tab_ship_info_extend WHERE ship_id=<船号>;
-  -- 删除三个转速规划参数,任务即在校验阶段秒退(实测全程 23 毫秒)
-  DELETE i FROM vms_sys_db.tab_ship_info_extend i
-  LEFT JOIN vms_sys_db.tab_ship_param_model m ON i.param_id = m.id
-  WHERE i.ship_id = <船号>
-    AND (m.param_name_en IN ('Planning_rpm_min','Planning_rpm_max','RPM_planning_step')
-         OR m.param_name IN ('航速优化最小规划转速','航速优化最大规划转速','航速优化转速规划粒度'));
-  ```
-  注意:**别用"清航次 ETA"当开关**——船员下次填航次又会触发;转速参数是船员碰不到的管理端配置,才是稳定开关
+- **修复**(不改代码的运维方案,已实船验证;**按 查→备→删→验 四步走**):
+  1. **查**:确认该船配置了三个转速参数、且最新航次 ETA 在未来(三者缺一不会触发):
+     ```sql
+     SELECT i.id, i.ship_id, m.param_name, m.param_name_en, i.param_value
+     FROM vms_sys_db.tab_ship_info_extend i
+     LEFT JOIN vms_sys_db.tab_ship_param_model m ON i.param_id = m.id
+     WHERE i.ship_id = <船号>
+       AND (m.param_name_en IN ('Planning_rpm_min','Planning_rpm_max','RPM_planning_step')
+            OR m.param_name IN ('航速优化最小规划转速','航速优化最大规划转速','航速优化转速规划粒度'));
+
+     SELECT id, flight_number, FROM_UNIXTIME(estimated_end_time) AS eta
+     FROM vms_sys_db.tab_flight_record WHERE ship_id=<船号> ORDER BY flight_start_time DESC LIMIT 3;
+     ```
+  2. **备**:`CREATE TABLE IF NOT EXISTS tab_ship_info_extend_bak_YYYYMMDD AS SELECT * FROM vms_sys_db.tab_ship_info_extend WHERE ship_id=<船号>;`(回滚用:把备份行 INSERT 回去即可)
+  3. **删**:三个参数删掉后,任务在校验阶段秒退(实测全程 23 毫秒),**无需重启服务**,下个整十分钟点生效:
+     ```sql
+     DELETE i FROM vms_sys_db.tab_ship_info_extend i
+     LEFT JOIN vms_sys_db.tab_ship_param_model m ON i.param_id = m.id
+     WHERE i.ship_id = <船号>
+       AND (m.param_name_en IN ('Planning_rpm_min','Planning_rpm_max','RPM_planning_step')
+            OR m.param_name IN ('航速优化最小规划转速','航速优化最大规划转速','航速优化转速规划粒度'));
+     -- 验证:应返回 0 行
+     ```
+  4. **验**:等 12 分钟(跨过一个任务点)后,日志出现 `规划转速列表为空,航速优化功能无法计算` + `定时任务运行结束`,不出现 `规划航段数量`
+  - **备选(临时手段,不推荐长期用)**:清最新航次 ETA——`UPDATE tab_flight_record SET estimated_end_time=NULL WHERE ship_id=<船号> ORDER BY flight_start_time DESC LIMIT 1;`(改前先 `CREATE TABLE tab_flight_record_bak_YYYYMMDD AS SELECT * ...` 备份)。代码遇到空 ETA 同样在建树前 return,但**船员下次填航次就复发**;且会让页面"预计到达时间"显示为空,需业务知会。**稳定开关是转速参数,ETA 只作应急**
+  - **注意**:别用"清 ETA"当长期方案(船员碰得到);转速参数是管理端配置、船员碰不到,才是稳定开关
 - **验证**:日志出现 `规划转速列表为空,航速优化功能无法计算` 且 `航速优化功能定时任务运行结束`(毫秒级);`jmap -histo` 里 `SpeedPlanningNaryTree$TreeNode` 归零;`jstat` FGC=0、老年代稳定;`docker logs --since 10m system | grep -c 'will attempt rediscovery'` = 0
 - **代价**:该船"航速优化建议"功能停用(写 `SPEED_RECOMMEND` Redis key),需业务确认;这是绕行,**代码缺陷必须提单给研发**(全枚举 O(档位数^航段数) + 每节点全量拷贝,应改剪枝+共享序列)
 - **连带发现**(同批排掉的独立问题):①`tab_res_status` 缺 `(ship_id,device_key,start_utc)` 索引,realTimeData 绿色航速逻辑每 2 秒全扫 8.4G 表 → MySQL 99% CPU,加索引后 EXPLAIN 走索引、CPU 降;②`tab_data_org`/`tab_res_clean` 无归档策略(合计约 400G),按 3 个月 `TRUNCATE PARTITION` 后磁盘 19%→8%;③报表查询无时间范围,单次扫 392 秒,会堵死 DDL 的 MDL 锁(用 `KILL` 清长查询)
