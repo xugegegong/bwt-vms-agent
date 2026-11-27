@@ -106,6 +106,20 @@ SpeedOptimizeSeriveImpl.speedOptimialTask()      // @Scheduled(cron = "0 1/10 * 
 6. **服务器时区是 UTC**：日志里 02:xx 是北京时间 10:xx，别把时间戳误判为异常。
 7. **容器内存限额与 JVM 堆必须成对改**：只改 start.sh 的 Xmx 不改 container memory（或反之）等于没改。改 `docker update --memory` 时必须同时给 `--memory-swap`。
 8. **加索引/删数据都建议先备份行/做分区副本**，并选低峰执行。
+9. **老年代高 ≠ 泄漏**:判据是一次强制 Full GC 前后对比——
+   `jcmd <pid> GC.run` 后 `jstat -gcutil` 再看 O 列:
+   掉回低位(如 90%→37%)= 垃圾堆积,JVM 正常锯齿,不用管;
+   掉不下来(如 100%→100%)= 活对象撑满,真泄漏(航速优化那次就是这种)。
+   另:活对象少的时候 Full GC 只需约 1 秒;要 5~30 秒的都是病态。
+
+## 五b、次要问题：trim 模块每 10 分钟全表 reload
+
+`TrimOptimizeServiceImpl.reloadTrimConfig()`（`@Scheduled(cron="0 0/10 * * * *")`）
+每 10 分钟对 `tab_trim_relation` / `tab_hydrostatic_trimmed` 做一次 `selectAll()`
+全表加载（覆盖式 put 到内存 Map，旧对象变垃圾）。实测每轮产生约 9 千个
+TabTrimRelation 垃圾对象+对应 DB 全表查询。**不导致故障**（垃圾可回收，
+Full GC 1 秒清完），但属于不必要的周期开销，建议研发改为按船/按变更 reload，
+或加大间隔。此条已附在缺陷单"次要问题"节。
 
 ## 六、给交付的检查清单（新船/存量船排查）
 
